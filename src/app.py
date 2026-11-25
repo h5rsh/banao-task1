@@ -80,11 +80,69 @@ def metrics():
     return STATE.get("metrics", {})
 
 
+FALLBACK_SAMPLES = [
+    {
+        "label": "High Risk (Under-₹2k Repeat Partner)",
+        "claim": {
+            "claim_id": "WC711887",
+            "submitted_at": "2026-07-22 00:05",
+            "partner_id": "SP3129",
+            "sku": "KH-MG-03",
+            "product_serial": "KH395147108",
+            "days_since_purchase": 120,
+            "claim_amount_inr": 1995.0,
+            "photo_attached": "N",
+            "partner_inspected": "N",
+            "claim_description": "motor not running",
+            "inspector_note": None,
+            "customer_prior_claims": 2,
+            "source": "crm",
+        },
+    },
+    {
+        "label": "Medium Risk (Uninspected Claim)",
+        "claim": {
+            "claim_id": "WC711349",
+            "submitted_at": "2026-07-01 01:13",
+            "partner_id": "SP3209",
+            "sku": "KH-MG-03",
+            "product_serial": "kh662573314",
+            "days_since_purchase": 419,
+            "claim_amount_inr": 1234.0,
+            "photo_attached": "N",
+            "partner_inspected": "N",
+            "claim_description": "remote not working",
+            "inspector_note": None,
+            "customer_prior_claims": 1,
+            "source": "crm",
+        },
+    },
+    {
+        "label": "Low Risk (Inspected Normal Claim)",
+        "claim": {
+            "claim_id": "WC711348",
+            "submitted_at": "2026-07-01 00:41",
+            "partner_id": "SP3219",
+            "sku": "KH-MG-03",
+            "product_serial": "KH395147108",
+            "days_since_purchase": 577,
+            "claim_amount_inr": 3730.0,
+            "photo_attached": "Y",
+            "partner_inspected": "Y",
+            "claim_description": "power button not working",
+            "inspector_note": "Minor fault, part swapped",
+            "customer_prior_claims": 1,
+            "source": "crm",
+        },
+    },
+]
+
+
 @app.get("/sample-claims")
 def sample_claims():
-    """Return 3 representative claims (High, Medium, Low risk) from test_unlabelled.csv."""
+    """Return 3 representative claims (High, Medium, Low risk)."""
     if not TEST_FILE.exists():
-        return {"samples": []}
+        return {"samples": FALLBACK_SAMPLES}
     test_df = pd.read_csv(TEST_FILE)
     samples = []
     for label, cid in [
@@ -96,7 +154,7 @@ def sample_claims():
         if not row.empty:
             rec = row.iloc[0].where(pd.notna(row.iloc[0]), None).to_dict()
             samples.append({"label": label, "claim": rec})
-    return {"samples": samples}
+    return {"samples": samples or FALLBACK_SAMPLES}
 
 
 @app.post("/predict")

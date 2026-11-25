@@ -11,11 +11,23 @@ import pandas as pd
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
-TRAIN_FILE = ROOT_DIR / "56cf31d5-987f-4cb3-8bd2-79ae2703b0e7-train.csv"
-TEST_FILE = ROOT_DIR / "b5fccfca-78de-4ad7-8875-b6b3bae430d0-test_unlabelled.csv"
-PARTNERS_FILE = ROOT_DIR / "bf766253-255c-47e9-9497-7da7563e1f41-partners.csv"
-PRODUCTS_FILE = ROOT_DIR / "4d412d82-135b-4e15-b332-a79885e6a1db-products.csv"
-SAMPLE_SUB_FILE = ROOT_DIR / "4508b45d-31cb-4bbe-8f86-8b3dfd77ddb1-sample_submission.csv"
+def _resolve_data_file(name: str) -> Path:
+    """Resolve either `<name>` or `*-<name>` in ROOT_DIR or ROOT_DIR/data."""
+    for base in (ROOT_DIR, ROOT_DIR / "data"):
+        direct = base / name
+        if direct.exists():
+            return direct
+        matches = sorted(base.glob(f"*-{name}"))
+        if matches:
+            return matches[0]
+    return ROOT_DIR / name
+
+
+TRAIN_FILE = _resolve_data_file("train.csv")
+TEST_FILE = _resolve_data_file("test_unlabelled.csv")
+PARTNERS_FILE = _resolve_data_file("partners.csv")
+PRODUCTS_FILE = _resolve_data_file("products.csv")
+SAMPLE_SUB_FILE = _resolve_data_file("sample_submission.csv")
 
 NUM_COLS = [
     "days_since_purchase",

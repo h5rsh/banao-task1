@@ -1,0 +1,46 @@
+{
+  "train_dedup_known_rows": 11146,
+  "train_fraud_count": 141,
+  "test_rows": 2252,
+  "recommended_threshold": 0.5794,
+  "test_score_p95": 0.612,
+  "test_score_max": 0.9942,
+  "validation": {
+    "pre_may_mar_apr_2026": {
+      "n_claims": 1447,
+      "n_fraud": 18,
+      "dummy_zero_accuracy": 0.9875604699378023,
+      "roc_auc": 0.7408444133426639,
+      "pr_auc": 0.4362443838204941,
+      "accuracy_at_0_5": 0.9474775397373877,
+      "capacity_k": 80,
+      "tp_at_k": 10,
+      "fp_at_k": 70,
+      "precision_at_k": 0.125,
+      "recall_at_k": 0.5555555555555556,
+      "fraud_stopped_inr": 63824.0,
+      "total_fraud_inr": 93415.0,
+      "goodwill_cost_inr": 26600.0,
+      "net_saved_inr": 37224.0,
+      "net_per_review_inr": 465.3
+    },
+    "post_may_jun_2026": {
+      "n_claims": 713,
+      "n_fraud": 22,
+      "dummy_zero_accuracy": 0.9691444600280504,
+      "roc_auc": 0.8666622812787791,
+      "pr_auc": 0.3871685703533242,
+      "accuracy_at_0_5": 0.9298737727910238,
+      "capacity_k": 40,
+      "tp_at_k": 14,
+      "fp_at_k": 26,
+      "precision_at_k": 0.35,
+      "recall_at_k": 0.6363636363636364,
+      "fraud_stopped_inr": 20263.0,
+      "total_fraud_inr": 45673.0,
+      "goodwill_cost_inr": 9880.0,
+      "net_saved_inr": 10383.0,
+      "net_per_review_inr": 259.57
+    }
+  }
+}

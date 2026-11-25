@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kestrel Home — Warranty Claim Review</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #18202c;
+      --muted: #5c6675;
+      --border: #dfe3eb;
+      --accent: #1f5eff;
+      --high: #d92d20;
+      --high-bg: #fef3f2;
+      --med: #b54708;
+      --med-bg: #fffaeb;
+      --low: #067647;
+      --low-bg: #ecfdf3;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .container { max-width: 1080px; margin: 28px auto; padding: 0 20px; }
+    header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    h1 { margin: 0; font-size: 1.5rem; }
+    .subtitle { color: var(--muted); font-size: 0.92rem; margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; }
+    @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+    }
+    .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    button {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    button:hover { background: #f1f4f9; }
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      padding: 10px 18px;
+      font-size: 0.95rem;
+    }
+    button.primary:hover { background: #1749cc; }
+    textarea {
+      width: 100%;
+      min-height: 290px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.84rem;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fbfcfe;
+      resize: vertical;
+    }
+    .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .HIGH { color: var(--high); background: var(--high-bg); border: 1px solid #fecdca; }
+    .MEDIUM { color: var(--med); background: var(--med-bg); border: 1px solid #fedf89; }
+    .LOW { color: var(--low); background: var(--low-bg); border: 1px solid #abefc6; }
+    .score-row { display: flex; align-items: baseline; justify-content: space-between; margin: 12px 0; }
+    .score-num { font-size: 2.2rem; font-weight: 700; }
+    .kv { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin: 14px 0; font-size: 0.88rem; }
+    .kv div span { display: block; color: var(--muted); font-size: 0.78rem; }
+    ul.reasons { padding-left: 18px; margin: 8px 0 0; font-size: 0.92rem; }
+    ul.reasons li { margin-bottom: 6px; }
+    .error { color: var(--high); font-size: 0.88rem; margin-top: 8px; }
+    .muted { color: var(--muted); font-size: 0.84rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Kestrel Home — Warranty Claim Fraud Review</h1>
+        <div class="subtitle">Claims Investigation Desk · Capacity-capped triage (40 reviews/month) · ₹380 false-positive goodwill cost</div>
+      </div>
+      <div class="muted" id="healthStatus">Checking service...</div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <div class="presets" id="presetButtons">
+          <span class="muted" style="align-self:center;">Load sample:</span>
+        </div>
+        <textarea id="claimJson" spellcheck="false"></textarea>
+        <div class="actions">
+          <span class="muted">Single-record JSON → <code>POST /predict</code></span>
+          <button class="primary" onclick="scoreClaim()">Score Claim</button>
+        </div>
+        <div class="error" id="errorBox"></div>
+      </div>
+
+      <div class="card" id="resultCard">
+        <div class="muted">Submit a claim to see the fraud score, recommended action, and plain-English reasons.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const defaultClaim = {
+      claim_id: "WC711887",
+      submitted_at: "2026-07-22 00:05",
+      partner_id: "SP3129",
+      sku: "KH-MG-03",
+      product_serial: "KH395147108",
+      days_since_purchase: 120,
+      claim_amount_inr: 1995.0,
+      photo_attached: "N",
+      partner_inspected: "N",
+      claim_description: "motor not running",
+      inspector_note: null,
+      customer_prior_claims: 2,
+      source: "crm"
+    };
+
+    document.getElementById("claimJson").value = JSON.stringify(defaultClaim, null, 2);
+
+    async function init() {
+      try {
+        const h = await fetch("/health").then(r => r.json());
+        document.getElementById("healthStatus").textContent = h.model_loaded ? "Model Ready (No external API key required)" : "Model Loading...";
+      } catch {
+        document.getElementById("healthStatus").textContent = "Service offline";
+      }
+
+      try {
+        const data = await fetch("/sample-claims").then(r => r.json());
+        const wrap = document.getElementById("presetButtons");
+        (data.samples || []).forEach(s => {
+          const btn = document.createElement("button");
+          btn.textContent = s.label;
+          btn.onclick = () => {
+            document.getElementById("claimJson").value = JSON.stringify(s.claim, null, 2);
+            scoreClaim();
+          };
+          wrap.appendChild(btn);
+        });
+      } catch {}
+      scoreClaim();
+    }
+
+    async function scoreClaim() {
+      const errBox = document.getElementById("errorBox");
+      errBox.textContent = "";
+      let payload;
+      try {
+        payload = JSON.parse(document.getElementById("claimJson").value);
+      } catch (e) {
+        errBox.textContent = "Invalid JSON: " + e.message;
+        return;
+      }
+
+      try {
+        const res = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          errBox.textContent = `API error (${res.status}): ${txt}`;
+          return;
+        }
+        const out = await res.json();
+        renderResult(out);
+      } catch (e) {
+        errBox.textContent = "Request failed: " + e.message;
+      }
+    }
+
+    function renderResult(out) {
+      const pct = (out.fraud_score * 100).toFixed(1);
+      const pc = out.partner_context || {};
+      const reasonsHtml = (out.reasons || []).map(r => `<li>${r}</li>`).join("");
+      document.getElementById("resultCard").innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong>Claim ${out.claim_id}</strong>
+          <span class="badge ${out.risk_band}">${out.risk_band} RISK</span>
+        </div>
+        <div class="score-row">
+          <div class="score-num">${pct}%</div>
+          <div class="muted">Action: <strong>${out.recommended_action}</strong></div>
+        </div>
+        <div class="kv">
+          <div><span>Hold Threshold (Top 40/mo)</span><strong>${(out.threshold_used * 100).toFixed(1)}%</strong></div>
+          <div><span>Expected Net Value</span><strong>₹${out.expected_net_value_inr.toLocaleString("en-IN")}</strong></div>
+          <div><span>Partner</span><strong>${pc.partner_id} (${pc.city}, ${pc.partner_type})</strong></div>
+          <div><span>Partner History</span><strong>${pc.historical_frauds}/${pc.historical_claims} frauds (${pc.recent_60d_frauds} recent)</strong></div>
+        </div>
+        <div>
+          <strong>Reasons for Kestrel Desk</strong>
+          <ul class="reasons">${reasonsHtml}</ul>
+        </div>
+      `;
+    }
+
+    init();
+  </script>
+</body>
+</html>
+
